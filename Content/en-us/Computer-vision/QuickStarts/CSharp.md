@@ -9,7 +9,8 @@ Weight: 109
 This article provides information and code samples to help you quickly get started using the Computer Vision API with C# to accomplish the following tasks: 
 * [Analyze an image](#AnalyzeImage) 
 * [Intelligently generate a thumbnail](#GetThumbnail)
-* [Detect and extract text from an Image](#OCR)
+* [Detect and extract text from an image](#OCR)
+* [Recognize handwriting in an image](#RecognizeText)
 
 ## Prerequisites
 * Get the Microsoft Computer Vision API Windows SDK [here](https://github.com/Microsoft/Cognitive-vision-windows)
@@ -379,4 +380,63 @@ Upon success, the OCR results returned include text, bounding box for regions, l
   ]
 }
 
+```
+## Handwriting Recognition with Computer Vision API Using C# <a name="RecognizeText"> </a>
+Use the [RecognizeText method](https://ocr.portal.azure-api.net/docs/services/56f91f2d778daf23d8ec6739/operations/587f2c6a154055056008f200) to detect handwriting in an image and extract recognized characters into a machine-usable character stream.
+
+#### Handwriting C# Example Request
+```c#
+using System;
+using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+
+namespace CSHttpClientSample
+{
+    static class Program
+    {
+        static void Main()
+        {
+            Console.Write("Enter image file path: ");
+            string imageFilePath = Console.ReadLine();
+
+            MakeOCRRequest(imageFilePath);
+
+            Console.WriteLine("\n\n\nHit ENTER to exit...");
+            Console.ReadLine();
+        }
+
+        static byte[] GetImageAsByteArray(string imageFilePath)
+        {
+            FileStream fileStream = new FileStream(imageFilePath, FileMode.Open, FileAccess.Read);
+            BinaryReader binaryReader = new BinaryReader(fileStream);
+            return binaryReader.ReadBytes((int)fileStream.Length);
+        }
+
+        static async void MakeOCRRequest(string imageFilePath)
+        {
+            var client = new HttpClient();
+
+            // Request headers
+            client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", "13hc77781f7e4b19b5fcdd72a8df7156");
+
+            // Request parameters and URI
+            string requestParameter = "handwriting=true";
+            string uri = "https://ocr.azure-api.net/vision/v1.0/recognizeText?" + requestParameter;
+
+            HttpResponseMessage response;
+
+            // Request body. Try this sample with a locally stored JPEG image.
+            byte[] byteData = GetImageAsByteArray(imageFilePath);
+
+            using (var content = new ByteArrayContent(byteData))
+            {
+                // This example uses content type "application/octet-stream".
+                // The other content types you can use are "application/json" and "multipart/form-data".
+                content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                response = await client.PostAsync(uri, content);
+            }
+        }
+    }
+}
 ```
